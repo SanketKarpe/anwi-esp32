@@ -1,4 +1,4 @@
-Processing esp32dev (platform: espressif32; board: esp32dev; framework: arduino)
+﻿Processing esp32dev (platform: espressif32; board: esp32dev; framework: arduino)
 --------------------------------------------------------------------------------
 Verbose mode can be enabled via `-v, --verbose` option
 CONFIGURATION: https://docs.platformio.org/page/boards/espressif32/esp32dev.html
@@ -27,22 +27,6 @@ Dependency Graph
 |-- EEPROM @ 2.0.0
 |-- HTTPClient @ 2.0.0
 Building in release mode
+Compiling .pio\build\esp32dev\lib3c6\config\config.cpp.o
 Compiling .pio\build\esp32dev\libc2c\packet_capture\packet_capture.cpp.o
-lib/packet_capture/packet_capture.cpp: In function 'void sniffer_wifi_promiscuous_rx(void*, wifi_promiscuous_pkt_type_t)':
-lib/packet_capture/packet_capture.cpp:36:26: error: 'WiFi' was not declared in this scope
-       pkt_info.channel = WiFi.channel(); // or rx_ctrl->channel
-                          ^~~~
-lib/packet_capture/packet_capture.cpp: In function 'void init_sniffing()':
-lib/packet_capture/packet_capture.cpp:183:3: error: 'WiFi' was not declared in this scope
-   WiFi.mode(WIFI_STA);
-   ^~~~
-lib/packet_capture/packet_capture.cpp:183:13: error: 'WIFI_STA' was not declared in this scope
-   WiFi.mode(WIFI_STA);
-             ^~~~~~~~
-lib/packet_capture/packet_capture.cpp:183:13: note: suggested alternative: 'WIFI_IF_STA'
-   WiFi.mode(WIFI_STA);
-             ^~~~~~~~
-             WIFI_IF_STA
-Compiling .pio\build\esp32dev\FrameworkArduino\FirmwareMSC.cpp.o
-*** [.pio\build\esp32dev\libc2c\packet_capture\packet_capture.cpp.o] Error 1
-========================== [FAILED] Took 5.77 seconds ==========================
+Compiling .pio\build\esp32dev\libe05\debug_print\debug_print.cpp.o

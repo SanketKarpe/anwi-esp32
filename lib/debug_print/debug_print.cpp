@@ -3,10 +3,6 @@
 #include "..\ieee80211_packet.h"
 #include <Arduino.h>
 
-extern "C" {
-#include <user_interface.h>
-}
-
 /**
  * @brief Prints debug info for beacon frames.
  *

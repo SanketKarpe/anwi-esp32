@@ -3,11 +3,11 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
-#include <ESP8266WebServer.h>
+#include <WebServer.h>
 
 struct sensor_config_info sensor_config;
 
-ESP8266WebServer server(80);
+WebServer server(80);
 
 uint8_t curr_channel = 0;
 uint8_t set_channel = INIT_CHANNEL;

@@ -4,8 +4,10 @@
 #include "packet_capture.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <ESP8266WiFi.h>
-#include <esp8266httpclient.h>
+#include <HTTPClient.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
+
 
 #define NRF_CHANNEL 8
 
@@ -273,7 +275,7 @@ void heartbeat() {
 
     if (heartbeat_type == WIFI_HEARTBEAT) // 2
     {
-      wifi_promiscuous_enable(DISABLE);
+      esp_wifi_set_promiscuous(false);
       connect_Wifi();
       WiFiClient client;
       HTTPClient http;
@@ -330,7 +332,7 @@ void send_alert() {
   alertTimecurr = millis();
   if (alertTimecurr - alertTimeprev >= ALERT_FREQ) // || !is_first_alert_sent)
   {
-    wifi_promiscuous_enable(DISABLE);
+    esp_wifi_set_promiscuous(false);
     if (DEBUG_PRINT) {
       Serial.println("Sending Alert");
     }

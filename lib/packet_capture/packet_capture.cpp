@@ -1,26 +1,12 @@
 
 #include "packet_capture.h"
 #include <Arduino.h>
+#include <esp_wifi.h>
+#include <esp_wifi_types.h>
 
 struct captured_packet_info pkt_info;
 
 char bssid_mac[MAC_LEN_FMT];
-
-/**
- * @brief Initializes the WiFi sniffer.
- *
- * Sets the WiFi mode to Station, sets the channel, and enables promiscuous mode
- * with the defined callback function.
- */
-void init_sniffing() {
-  wifi_set_opmode(STATION_MODE);
-  wifi_set_channel(set_channel);
-  wifi_promiscuous_enable(DISABLE);
-  delay(10);
-  wifi_set_promiscuous_rx_cb(sniffer_wifi_promiscuous_rx);
-  delay(10);
-  wifi_promiscuous_enable(ENABLE);
-}
 
 /**
  * @brief Callback function for processing captured packets.
@@ -32,21 +18,22 @@ void init_sniffing() {
  * @param buf Pointer to the packet buffer.
  * @param buf_len Length of the packet buffer.
  */
-void sniffer_wifi_promiscuous_rx(uint8 *buf, uint16 buf_len) {
-  uint8_t *data;
-  uint16_t i;
-  uint16_t len;
+void sniffer_wifi_promiscuous_rx(void *buf, wifi_promiscuous_pkt_type_t type) {
+  wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
+  wifi_pkt_rx_ctrl_t *rx_ctrl = &pkt->rx_ctrl;
+  uint8_t *frame = pkt->payload;
+
+  uint16_t len = rx_ctrl->sig_len;
   uint16_t cnt = 0;
 
-  // MGMT Packet == buf2
-  if (buf_len == sizeof(struct sniffer_buf2)) {
-    struct sniffer_buf2 *ptr_buf2 = (struct sniffer_buf2 *)buf;
+  // Only process management frames
+  if (type == WIFI_PKT_MGMT) {
     struct ieee80211_frame_header *ptr_frame =
-        (struct ieee80211_frame_header *)ptr_buf2->buf;
+        (struct ieee80211_frame_header *)frame;
     if (ptr_frame->frame_control.type == IEEE80211_FTYPE_MGMT) {
       pkt_info.type = IEEE80211_FTYPE_MGMT;
-      pkt_info.rssi = ptr_buf2->rx_ctrl.rssi;
-      pkt_info.channel = wifi_get_channel();
+      pkt_info.rssi = rx_ctrl->rssi;
+      pkt_info.channel = WiFi.channel(); // or rx_ctrl->channel
       pkt_info.attack_type = -1;
 
       if (ptr_frame->frame_control.frame_control_flags.to_ds == 0 &&
@@ -184,4 +171,20 @@ void sniffer_wifi_promiscuous_rx(uint8 *buf, uint16 buf_len) {
     }
     return;
   }
+}
+
+/**
+ * @brief Initializes the WiFi sniffer.
+ *
+ * Sets the WiFi mode to Station, sets the channel, and enables promiscuous mode
+ * with the defined callback function.
+ */
+void init_sniffing() {
+  WiFi.mode(WIFI_STA);
+  esp_wifi_set_channel(set_channel, WIFI_SECOND_CHAN_NONE);
+  esp_wifi_set_promiscuous(false);
+  delay(10);
+  esp_wifi_set_promiscuous_rx_cb(sniffer_wifi_promiscuous_rx);
+  delay(10);
+  esp_wifi_set_promiscuous(true);
 }

@@ -1,8 +1,9 @@
 #include "..\lib\global_vars.h"
 #include <ArduinoJson.h>
 #include <EEPROM.h>
-#include <ESP8266WiFi.h>
-#include <esp8266httpclient.h>
+#include <HTTPClient.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
 
 #include "alerts.h"
 #include "config.h"
@@ -30,7 +31,8 @@ void hop_channel() {
       Serial.print(" CHAN SET TO : ");
       Serial.println(set_channel);
     }
-    wifi_set_channel(set_channel);
+
+    esp_wifi_set_channel(set_channel, WIFI_SECOND_CHAN_NONE);
   }
 }
 
@@ -75,34 +77,34 @@ void loop() {
   else if (sensor_config.operation_mode == OPERATION_PROTECTION_MODE) {
     delay(5000);
     // recalibrate geofence after regular interval
+    // recalibrate geofence after regular interval
     recalibrate_transmission_power();
 
     // set values for pkt_info variable
     unsigned char number_client;
-    struct station_info *stat_info;
-    int i = 1;
 
-    number_client =
-        wifi_softap_get_station_num(); // Count of stations which are connected
-                                       // to ESP8266 soft-AP
-    stat_info = wifi_softap_get_station_info();
+    wifi_sta_list_t wifi_sta_list;
+    esp_wifi_ap_get_sta_list(&wifi_sta_list);
+
+    number_client = wifi_sta_list.num;
+
     if (DEBUG_PRINT) {
       Serial.print(" Total connected_client are = ");
       Serial.println(number_client);
-
-      if (stat_info == NULL) {
-        Serial.print("ERROR: Stat_info is null");
-      }
     }
+
     // send alert for each connected client.. Currently no duplicate checked
     char bssid_mac[18];
-    while (stat_info != NULL) {
+    for (int i = 0; i < wifi_sta_list.num; i++) {
+      wifi_sta_info_t station = wifi_sta_list.sta[i];
+
       pkt_info.attack_type = IS_GEOFENCE_ATTACK;
       WiFi.macAddress(pkt_info.frame_hdr.bssid_address);
       pkt_info.channel = 1;
-      pkt_info.rssi = WiFi.RSSI();
+      pkt_info.rssi = WiFi.RSSI(); // Note: RSSI might not be available for AP
+                                   // clients easily in this mode
       WiFi.macAddress(pkt_info.frame_hdr.destination_address);
-      MEMCPY(pkt_info.frame_hdr.source_address, stat_info->bssid, 6);
+      MEMCPY(pkt_info.frame_hdr.source_address, station.mac, 6);
       pkt_info.frame_hdr.deauth.reason_code = 0;
       snprintf(bssid_mac, sizeof(bssid_mac), MACSTR,
                MAC2STR(pkt_info.frame_hdr.bssid_address));
@@ -110,8 +112,6 @@ void loop() {
       Serial.println(bssid_mac);
       send_alert();
       pkt_info.attack_type = -1;
-      stat_info = STAILQ_NEXT(stat_info, next);
-      i++;
     }
     pkt_info.attack_type = -1;
   }

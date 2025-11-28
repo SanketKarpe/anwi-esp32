@@ -1,4 +1,6 @@
 #include "geofence.h"
+#include <WiFi.h>
+#include <esp_wifi.h>
 
 // geofence Settings
 String MAC_TO_PROTECT = "";
@@ -76,7 +78,7 @@ void set_transmission_power(int32_t strength) {
   strength = strength * (-1);
   Anwi_Power = 20.5 - (strength - Strength_Baseline) /
                           2; // mapping 40 to 80 with 0 20.5.
-  WiFi.setOutputPower(Anwi_Power);
+  esp_wifi_set_max_tx_power((int8_t)(Anwi_Power * 4));
   Serial.printf("Input signal strength = -%ddbm. Anwi power set to %f dBm\n",
                 strength, Anwi_Power);
 }

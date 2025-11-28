@@ -6,9 +6,7 @@
 #include ".\config\config.h"
 #include "ieee80211_packet.h"
 
-extern "C" {
-#include <user_interface.h>
-}
+#include <esp_wifi.h>
 
 #define DEBUG_PRINT 0
 
